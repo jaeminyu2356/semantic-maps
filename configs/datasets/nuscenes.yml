@@ -1,7 +1,7 @@
 train_dataset: nuscenes
-dataroot: /nas/KJW/Nuscene
+dataroot: /mnt/ssdnas/KJW/Nuscene
 nuscenes_version: v1.0-trainval
-label_root: /nas/KJW/Nuscene/maps
+label_root: /mnt/ssdnas/KJW/Nuscene
 img_size: [800, 600]
 num_class: 14
 class_weights:

@@ -128,19 +128,22 @@ if __name__ == '__main__':
     # Load the default configuration
     config = get_default_configuration()
     config.merge_from_file('configs/datasets/nuscenes.yml')
+    print("check dataset path")
 
     # Load NuScenes dataset
     dataroot = os.path.expandvars(config.dataroot)
     nuscenes = NuScenes(config.nuscenes_version, dataroot)
-
+    print("loading nuscenes")
+    
     # Preload NuScenes map data
     map_data = { location : load_map_data(dataroot, location) 
                  for location in nusc_utils.LOCATIONS }
-    
+    print("load map data")
+
     # Create a directory for the generated labels
     output_root = os.path.expandvars(config.label_root)
     os.makedirs(output_root, exist_ok=True)
-    
+
    # print(nuscenes.scene)
     # Iterate over NuScene scenes
     print("\nGenerating labels...")
