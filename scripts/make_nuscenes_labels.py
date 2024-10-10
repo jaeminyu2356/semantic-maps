@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import sys
 import numpy as np
@@ -5,18 +6,23 @@ from PIL import Image
 from tqdm import tqdm
 from collections import OrderedDict
 
+print(1)
 from shapely.strtree import STRtree
 from nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
+print(1)
 
 # sys.path.append(os.path.abspath(os.path.join(__file__, '../..')))
 sys.path.append('/home/mono-semantic-maps')
 
 from src.utils.configs import get_default_configuration
+print(1)
+
 from src.data.utils import get_visible_mask, get_occlusion_mask, transform, \
     encode_binary_labels
 import src.data.nuscenes.utils as nusc_utils
 
+print(1)
 
 def process_scene(nuscenes, map_data, scene, config):
 
@@ -124,7 +130,7 @@ def load_map_data(dataroot, location):
 
 
 if __name__ == '__main__':
-
+    print("road main")
     # Load the default configuration
     config = get_default_configuration()
     config.merge_from_file('configs/datasets/nuscenes.yml')
@@ -136,7 +142,7 @@ if __name__ == '__main__':
     print("loading nuscenes")
     
     # Preload NuScenes map data
-    map_data = { location : load_map_data(dataroot, location) 
+    map_data = { location : load_map_data(dat5099aroot, location) 
                  for location in nusc_utils.LOCATIONS }
     print("load map data")
 
