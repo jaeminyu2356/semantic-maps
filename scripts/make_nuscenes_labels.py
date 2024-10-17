@@ -6,30 +6,28 @@ from PIL import Image
 from tqdm import tqdm
 from collections import OrderedDict
 
-print(1)
 from shapely.strtree import STRtree
 from nuscenes import NuScenes
 from nuscenes.map_expansion.map_api import NuScenesMap
-print(1)
 
 # sys.path.append(os.path.abspath(os.path.join(__file__, '../..')))
-sys.path.append('/home/mono-semantic-maps')
+sys.path.append('/home/mono-semantic-maps/')
 
 from src.utils.configs import get_default_configuration
-print(1)
-
 from src.data.utils import get_visible_mask, get_occlusion_mask, transform, \
     encode_binary_labels
 import src.data.nuscenes.utils as nusc_utils
 
-print(1)
 
 def process_scene(nuscenes, map_data, scene, config):
-
     # Get the map corresponding to the current sample data
     log = nuscenes.get('log', scene['log_token'])
-    scene_map_data = map_data[log['location']]
-
+    print(log)
+    scene_map_data = map_data.get(log['location'])
+    
+    if scene_map_data is None:
+        raise KeyError(f"Map data for location '{log['location']}' not found in map_data.")
+    
     # Iterate over samples
     first_sample_token = scene['first_sample_token']
     for sample in nusc_utils.iterate_samples(nuscenes, first_sample_token):
@@ -37,7 +35,6 @@ def process_scene(nuscenes, map_data, scene, config):
 
 
 def process_sample(nuscenes, map_data, sample, config):
-
     # Load the lidar point cloud associated with this sample
     lidar_data = nuscenes.get('sample_data', sample['data']['LIDAR_TOP'])
     lidar_pcl = nusc_utils.load_point_cloud(nuscenes, lidar_data)
@@ -53,7 +50,6 @@ def process_sample(nuscenes, map_data, sample, config):
 
 
 def process_sample_data(nuscenes, map_data, sample_data, lidar, config):
-
     # Render static road geometry masks
     map_masks = nusc_utils.get_map_masks(nuscenes, 
                                          map_data, 
@@ -91,13 +87,12 @@ def process_sample_data(nuscenes, map_data, sample_data, lidar, config):
 
 
 def load_map_data(dataroot, location):
-
-    # Load the NuScenes map object
-    nusc_map = NuScenesMap(dataroot, location)
+    map_path = os.path.join(dataroot, 'maps', location)
+    print(f"Loading map data from: {map_path}")
+    nusc_map = NuScenesMap(map_path)
 
     map_data = OrderedDict()
     for layer in nusc_utils.STATIC_CLASSES:
-        
         # Retrieve all data associated with the current layer
         records = getattr(nusc_map, layer)
         polygons = list()
@@ -105,68 +100,48 @@ def load_map_data(dataroot, location):
         # Drivable area records can contain multiple polygons
         if layer == 'drivable_area':
             for record in records:
-
-                # Convert each entry in the record into a shapely object
                 for token in record['polygon_tokens']:
                     poly = nusc_map.extract_polygon(token)
                     if poly.is_valid:
                         polygons.append(poly)
         else:
             for record in records:
-
-                # Convert each entry in the record into a shapely object
                 poly = nusc_map.extract_polygon(record['polygon_token'])
                 if poly.is_valid:
                     polygons.append(poly)
 
-        
         # Store as an R-Tree for fast intersection queries
         map_data[layer] = STRtree(polygons)
     
     return map_data
 
 
-
-
-
 if __name__ == '__main__':
     print("road main")
     # Load the default configuration
     config = get_default_configuration()
-    config.merge_from_file('configs/datasets/nuscenes.yml')
+    print(config)
+    config.merge_from_file('/home/mono-semantic-maps/configs/datasets/nuscenes.yml')
     print("check dataset path")
 
     # Load NuScenes dataset
     dataroot = os.path.expandvars(config.dataroot)
     nuscenes = NuScenes(config.nuscenes_version, dataroot)
     print("loading nuscenes")
-    
-    # Preload NuScenes map data
-    map_data = { location : load_map_data(dat5099aroot, location) 
-                 for location in nusc_utils.LOCATIONS }
+
+    # Preload NuScenes map data for all locations
+    map_data = {}
+    for location in nusc_utils.LOCATIONS:
+        map_data[location] = load_map_data(dataroot, location)
+        print(f"Map data loaded for {location}")
+
     print("load map data")
 
     # Create a directory for the generated labels
     output_root = os.path.expandvars(config.label_root)
     os.makedirs(output_root, exist_ok=True)
 
-   # print(nuscenes.scene)
     # Iterate over NuScene scenes
     print("\nGenerating labels...")
     for scene in tqdm(nuscenes.scene):
         process_scene(nuscenes, map_data, scene, config)
-
-
-
-
-    
-
-
-    
-
-
-
-
-
-    
-

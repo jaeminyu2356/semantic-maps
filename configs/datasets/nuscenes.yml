@@ -1,7 +1,7 @@
 train_dataset: nuscenes
-dataroot: /mnt/nas/Nuscene
+dataroot: /home/mounted_folder/Nuscene
 nuscenes_version: v1.0-trainval
-label_root: /mnt/nas/Nuscene
+label_root: /home/mounted_folder/Nuscene
 img_size: [800, 600]
 num_class: 14
 class_weights:

@@ -7,8 +7,7 @@ try:
 except:
     pass
 
-# ROOT = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
-ROOT = os.path.abspath('/home/mono-semantic-maps')
+ROOT = os.path.abspath(os.path.join(__file__, '..', '..', '..'))
 
 
 def load_config(config_path):

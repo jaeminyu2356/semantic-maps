@@ -3,7 +3,7 @@
 ### Training options ###
 
 # IDs of GPUs to use during training
-gpus: [0, 2, 3, 4]
+gpus: [0, 1, 2]
 
 # Number of examples per mini-batch
 batch_size: 12
