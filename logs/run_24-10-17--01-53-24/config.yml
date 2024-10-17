@@ -1,0 +1,96 @@
+batch_size: 12
+bayesian: false
+class_weights:
+- 1.7
+- 5.9
+- 3.3
+- 4.6
+- 8.0
+- 10.3
+- 10.6
+- 6.9
+- 11.8
+- 30.1
+- 33.6
+- 41.2
+- 44.3
+- 15.9
+dataroot: /home/mounted_folder/Nuscene
+epoch_size: 50000
+focal:
+  alpha: 0.25
+  gamma: 2
+focal_length: 630.0
+gpus:
+- 0
+- 1
+- 2
+hflip: true
+hold_out_calibration: false
+img_size:
+- 800
+- 600
+kld_weight: 0.0
+label_root: /home/mounted_folder/Nuscene
+learning_rate: 0.1
+log_interval: 10
+logdir: logs
+loss_fn: bce
+lr_milestones:
+- 150
+- 185
+map_extents:
+- -25.0
+- 1.0
+- 25.0
+- 50.0
+map_resolution: 0.25
+mc_samples: 40
+model: pyramid
+num_class: 14
+num_epochs: 200
+num_workers: 8
+nuscenes_version: v1.0-trainval
+prior:
+- 0.44679
+- 0.02407
+- 0.14491
+- 0.02994
+- 0.02086
+- 0.00477
+- 0.00156
+- 0.00189
+- 0.00084
+- 0.00119
+- 0.00019
+- 0.00012
+- 0.00031
+- 0.00176
+score_thresh: 0.5
+tfm_channels: 64
+topdown:
+  blocktype: bottleneck
+  channels: 128
+  layers:
+  - 4
+  - 4
+  strides:
+  - 1
+  - 2
+train_dataset: nuscenes
+train_split: train
+uncert_weight: 0.001
+val_split: val
+ved:
+  bottleneck_dim: 18
+vis_interval: 200
+vpn:
+  fc_dim: 256
+  output_size:
+  - 29
+  - 50
+weight_decay: 0.0001
+weight_mode: sqrt_inverse
+xent_weight: 1.0
+ymax: 4
+ymin: -2

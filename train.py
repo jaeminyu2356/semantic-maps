@@ -22,7 +22,8 @@ def train(dataloader, model, criterion, optimiser, summary, config, epoch):
     model.train()
 
     # Compute prior probability of occupancy
-    prior = torch.tensor(config.prior).cuda()
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')  # 기본 디바이스 설정
+    prior = torch.tensor(config.prior).to(device)
     prior_log_odds = torch.log(prior / (1 - prior))
 
     # Initialise confusion matrix
@@ -32,8 +33,8 @@ def train(dataloader, model, criterion, optimiser, summary, config, epoch):
     iteration = (epoch - 1) * len(dataloader)
     for i, batch in enumerate(tqdm(dataloader)):
 
-        # Move tensors to GPU
-        batch = [t.cuda() for t in batch]
+        # Move tensors to the main device
+        batch = [t.to(device) for t in batch]
 
         # Predict class occupancy scores and compute loss
         image, calib, labels, mask = batch
@@ -50,8 +51,8 @@ def train(dataloader, model, criterion, optimiser, summary, config, epoch):
         optimiser.step()
 
         # Update confusion matrix
-        scores = logits.cpu().sigmoid()
-        confusion.update(scores > config.score_thresh, labels, mask)
+        scores = logits.detach().cpu().sigmoid()  # detach() 추가
+        confusion.update(scores > config.score_thresh, labels.cpu(), mask.cpu())
 
         # Update tensorboard
         if i % config.log_interval == 0:
@@ -59,13 +60,14 @@ def train(dataloader, model, criterion, optimiser, summary, config, epoch):
 
         # Visualise
         if i % config.vis_interval == 0:
-            visualise(summary, image, scores, labels, mask, iteration, config.train_dataset, split='train')
+            visualise(summary, image.cpu(), scores, labels.cpu(), mask.cpu(), iteration, config.train_dataset, split='train')
 
         iteration += 1
 
     # Print and record results
     display_results(confusion, config.train_dataset)
     log_results(confusion, config.train_dataset, summary, 'train', epoch)
+
 
 
 def evaluate(dataloader, model, criterion, summary, config, epoch):
@@ -232,24 +234,16 @@ def main():
     # Load configuration
     config = get_configuration(args)
 
-    # GPU 설정을 config.freeze() 이전에 수정
-    if torch.cuda.is_available():
-        available_gpus = list(range(torch.cuda.device_count()))  # Get available GPU IDs
-        if len(config.gpus) > len(available_gpus):
-            print(f"Warning: Only {len(available_gpus)} GPUs are available. Adjusting config.gpus to available GPUs.")
-            config.defrost()  # Allow changes to the configuration
-            config.gpus = available_gpus[:3]  # Limit to 3 GPUs if more are requested
-            config.freeze()  # Refreeze the configuration
-        print(f"Using GPUs: {config.gpus}")
+    # GPU 설정
+    if torch.cuda.is_available() and len(config.gpus) >= 1:
+        device = torch.device(f'cuda:{config.gpus[0]}')  # 첫 번째 GPU 사용
+        print(f"Using GPU(s): {config.gpus}")
 
-        # Define device_ids for DataParallel
-        device_ids = config.gpus
-
-        # Setup experiment with DataParallel for multi-GPU
+        # 모델 생성 및 이동
         model = build_model(config.model, config)
-        model = nn.DataParallel(model.cuda(), device_ids=device_ids)
     else:
-        raise RuntimeError("CUDA is not available.")
+        raise RuntimeError("CUDA is not available or no GPUs specified.")
+
 
     # Create a directory for the experiment
     logdir = create_experiment(config, args.tag, args.resume)  # logdir 생성

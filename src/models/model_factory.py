@@ -28,9 +28,10 @@ def build_model(model_name, config):
         raise ValueError("Unknown model name '{}'".format(model_name))
     
     if len(config.gpus) > 1:
-        model = nn.DataParallel(model.cuda(), config.gpus)
+        model.cuda()  # 모델을 주 GPU로 이동 (보통 GPU 0번)
+        model = nn.DataParallel(model, device_ids=config.gpus)
     elif len(config.gpus) == 1:
-        model.cuda()
+        model.to(f'cuda:{config.gpus[0]}')
     
     return model
 

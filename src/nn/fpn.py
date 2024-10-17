@@ -44,12 +44,8 @@ class FPN(nn.Module):
     
     def load_pretrained(self, path):
         pretrained = load_state_dict_from_url(path, progress=True)
-        state_dict = self.state_dict()
-        for key, weights in pretrained.items():
-            if key in state_dict:
-                state_dict[key].copy_(weights)
-        
-        self.load_state_dict(state_dict)
+        self.load_state_dict(pretrained, strict=False)
+
 
 
     def _upsample_add(self, x, y):
